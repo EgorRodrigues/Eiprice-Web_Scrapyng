@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.10.4
+
+    - name: Install poetry
+      run: |
+        pip install -U pip
+        pip install poetry
+
+    - name: Install dependencies
+      run: poetry install
+      env:
+        POETRY_VIRTUALENVS_CREATE: false
+
+    - name: Create env file
+      run: make copy-envs
+
+    - name: Outdated dependencies
+      run: make outdated
+
+    - name: Linting
+      run: make lint
+
+    - name: Run Tests
+      run: |
+        make test-security
+        make coverage-report
